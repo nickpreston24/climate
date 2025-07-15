@@ -1,0 +1,33 @@
+using Serilog.Core;
+using Microsoft.Extensions.DependencyInjection;
+using CodeMechanic.Async;
+
+namespace $namespace$;
+
+public class Application
+{
+    private readonly Logger logger;
+
+    private readonly TodoService todos;
+    private readonly WeatherService weather;
+
+    public Application(Logger logger
+        , TodoService todos
+        , WeatherService weather
+    )
+    {
+        this.logger = logger;
+        this.todos = todos;
+        this.weather = weather;
+    }
+
+    public async Task Run()
+    {
+        await todos.Run();
+        await weather.Run();
+    }
+}
+
+
+public class TodoService : QueuedService {}
+public class WeatherService : QueuedService {}

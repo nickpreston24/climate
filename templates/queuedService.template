@@ -1,0 +1,16 @@
+﻿using CodeMechanic.Async;
+using CodeMechanic.Shargs;
+
+namespace $namespace$;
+
+public class $service_name$ : QueuedService
+{
+    private readonly bool debug;
+    private readonly ArgsMap arguments;
+
+    public $service_name$(ArgsMap arguments)
+    {
+        this.debug = arguments.HasFlag("--debug");
+        this.arguments = arguments;
+    }
+}

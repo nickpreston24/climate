@@ -1,0 +1,10 @@
+{
+  "registries": [
+    {
+      "url": "https://portadev-production.up.railway.app/v3/index.json"
+    },
+    {
+      "url": "https://api.nuget.org/v3/index.json"
+    }
+  ]
+}

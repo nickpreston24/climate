@@ -1,0 +1,9 @@
+﻿using Vogen;
+
+[ValueObject<string>()]
+[Instance("Unspecified", "")]
+[Instance("dotnet_tools", ".dotnet/tools")]
+[Instance("tool_folder_name", $".{nameof($namespace$)}")]
+public partial class $namespace$_directories
+{
+}

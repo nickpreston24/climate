@@ -1,0 +1,4 @@
+dotnet build
+dotnet pack
+dotnet tool install --global $namespace$ --add-source ./nupkg --ignore-failed-sources
+
