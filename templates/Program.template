@@ -1,3 +1,4 @@
+using CodeMechanic.Logging;
 using CodeMechanic.Shargs;
 using Serilog;
 using Serilog.Core;
@@ -11,15 +12,7 @@ internal class Program
     {
         var arguments = new ArgsMap(args);
 
-        var logger = new LoggerConfiguration()
-            .MinimumLevel.Information()
-            .WriteTo.Console()
-            .WriteTo.File(
-                ".$namespace$/logs/$namespace$.log",
-                rollingInterval: RollingInterval.Day,
-                rollOnFileSizeLimit: true
-            )
-            .CreateLogger();
+        var logger = new SerilogLoggerName(".$namespace$", "$namespace$").CreateLogger();
 
         bool run_as_cli = !arguments.HasCommand("web");
 

@@ -13,7 +13,7 @@ internal static class EmbeddedResourceExtensions
     {
         string resourcePath = ass
             .GetManifestResourceNames()
-            .Dump("resources")
+            // .Dump("resources")
             .FirstOrDefault(resource =>
                 resource.Contains(file_hint));
 
