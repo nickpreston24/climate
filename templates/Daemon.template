@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using CodeMechanic.Diagnostics;
+using CodeMechanic.FileSystem;
 using CodeMechanic.Logging;
 using CodeMechanic.Shargs;
 using Coravel;
@@ -14,13 +15,15 @@ internal class Program
 {
     static async Task Main(string[] args)
     {
+        DotEnv.Load();
+    
         var arguments = new ArgsMap(args);
         bool debug = arguments.HasFlag("--debug");
-        
-        var tool = new ToolSettings(name: nameof($namespace$), settingsFilename: "settings.json");
-        if (debug) tool.Dump(nameof(tool));
 
-        var logger = new SerilogLoggerName(tool.dotfolder, tool.name).CreateLogger();
+        var tool = new ToolSettings(name: nameof(fubar2), settingsFilename: "settings.json");
+        if (debug) tool.Dump(nameof(tool));        
+
+        var logger = new SerilogLoggerName(tool.dotfolder_name, tool.name).CreateLogger(debug);
 
         if (!Directory.Exists(tool.dotfolder))
         {

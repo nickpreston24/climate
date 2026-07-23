@@ -13,6 +13,8 @@ public record ToolSettings
 
     public string settings_filename { get; init; } // "settings.json"
 
+    public string dotfolder_name => $".{name}";
+
     public string dotfolder =>
         name.IsEmpty() ? throw new ArgumentNullException(nameof(name)) : Path.Combine(tools_folder, $".{name}");
 
