@@ -4,7 +4,7 @@ using CodeMechanic.Async;
 using CodeMechanic.Shargs;
 using Coravel.Invocable;
 
-namespace fubar;
+namespace $namespace$;
 
 public class Application
 {

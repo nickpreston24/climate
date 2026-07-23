@@ -17,7 +17,7 @@ internal class Program
         var arguments = new ArgsMap(args);
         bool debug = arguments.HasFlag("--debug");
         
-        var tool = new ToolSettings(name: nameof(fubar), settingsFilename: "settings.json");
+        var tool = new ToolSettings(name: nameof($namespace$), settingsFilename: "settings.json");
         if (debug) tool.Dump(nameof(tool));
 
         var logger = new SerilogLoggerName(tool.dotfolder, tool.name).CreateLogger();
