@@ -1,8 +1,10 @@
 using Serilog.Core;
 using Microsoft.Extensions.DependencyInjection;
 using CodeMechanic.Async;
+using CodeMechanic.Shargs;
+using Coravel.Invocable;
 
-namespace $namespace$;
+namespace fubar;
 
 public class Application
 {
@@ -28,6 +30,53 @@ public class Application
     }
 }
 
+public class TodoService : QueuedService, IInvocable
+{
+    private readonly Logger logger;
+    private readonly ArgsMap arguments;
 
-public class TodoService : QueuedService {}
-public class WeatherService : QueuedService {}
+    public TodoService(ArgsMap a, Logger l)
+    {
+        arguments = a;
+        logger = l;
+    }
+
+    public TodoService()
+    {
+        logger.Information($"hello from {nameof(TodoService)}");
+    }
+
+    public async Task<string> ProcessFileAsync(string filepath)
+    {
+        // dummy
+        Thread.Sleep(500);
+        return filepath;
+    }
+
+    public async Task Invoke()
+    {
+        logger.Information($"{nameof(TodoService)} invoked!");
+    }
+}
+
+public class WeatherService : QueuedService, IInvocable
+{
+    private readonly Logger logger;
+    private readonly ArgsMap arguments;
+
+    public WeatherService(ArgsMap a, Logger l)
+    {
+        arguments = a;
+        logger = l;
+    }
+
+    public WeatherService()
+    {
+        logger.Information($"hello from {nameof(WeatherService)}");
+    }
+
+    public async Task Invoke()
+    {
+        logger.Information($"{nameof(WeatherService)} invoked!");
+    }
+}

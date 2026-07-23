@@ -1,0 +1,130 @@
+using System.Collections.Concurrent;
+using CodeMechanic.Diagnostics;
+using CodeMechanic.Logging;
+using CodeMechanic.Shargs;
+using Coravel;
+using JsonFlatFileDataStore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Serilog.Core;
+
+namespace $namespace$;
+
+internal class Program
+{
+    static async Task Main(string[] args)
+    {
+        var arguments = new ArgsMap(args);
+        bool debug = arguments.HasFlag("--debug");
+        
+        var tool = new ToolSettings(name: nameof(fubar), settingsFilename: "settings.json");
+        if (debug) tool.Dump(nameof(tool));
+
+        var logger = new SerilogLoggerName(tool.dotfolder, tool.name).CreateLogger();
+
+        if (!Directory.Exists(tool.dotfolder))
+        {
+            logger.Warning($"Dotfolder {tool.dotfolder} does not exist ... creating it...");
+            Directory.CreateDirectory(tool.dotfolder);
+            logger.Information($"Dotfolder '{tool.dotfolder}' created for tool {tool.name}!");
+        }
+
+        var settings_store = new DataStore(tool.tool_settings_path);
+
+        logger.Information($"settings is at {tool.tool_settings_path}");
+        logger.Information($"dotfolder is at {tool.dotfolder}");
+
+        // run as a daemon or windows service by default. If dev provides the --cli flag,
+        // then we are running as a CLI, possibly in interactive mode (prompts).
+        bool run_as_daemon = //!arguments.HasCommand("--cli") ||
+            arguments.HasCommand("cron") || arguments.HasCommand("ide");
+
+        bool run_as_cli = !run_as_daemon; // || arguments.Count == 0;
+
+        if (run_as_cli)
+            await RunAsCli(arguments, logger, tool);
+
+        if (run_as_daemon)
+            await RunAsDaemon(args, logger, tool);
+    }
+
+    static async Task RunAsCli(ArgsMap arguments, Logger logger, ToolSettings tool_settings)
+    {
+        var services = CreateServices(arguments, logger, tool_settings);
+        Application app = services.GetRequiredService<Application>();
+        await app.Run();
+    }
+
+    private static async Task RunAsDaemon(string[] args
+        , Logger logger, ToolSettings tool_settings)
+    {
+        var arguments = new ArgsMap(args);
+        bool debug = arguments.HasFlag("--debug");
+
+        // IDE Mode disables coravel and runs only listeners
+        bool ide_mode = arguments.HasCommand("ide");
+        bool cron_mode = arguments.HasCommand("cron"); //#&& !ide_mode;
+
+        if (debug) logger.Information($"is ide? {ide_mode}");
+        if (debug) logger.Information($"is cron? {cron_mode}");
+
+        var builder = Host.CreateApplicationBuilder(args);
+
+        // normal services:
+        builder.Services.AddSingleton(logger);
+        builder.Services.AddSingleton(arguments);
+        builder.Services.AddSingleton(tool_settings);
+        builder.Services.AddScheduler();
+        builder.Services.AddSingleton<TodoService>();
+        builder.Services.AddSingleton<WeatherService>();
+
+        // File Watchers:
+        var file_processing_map = new ConcurrentDictionary<string, DateTime>();
+        builder.Services.AddSingleton(file_processing_map);
+
+        if (ide_mode)
+        {
+            logger.Information("Running in IDE MODE");
+            builder.Services.AddSingleton<BgQueue>();
+            builder.Services.AddSingleton<Listener>();
+            builder.Services.AddHostedService<BgWorker>();
+        }
+
+        var host = builder.Build();
+
+        if (cron_mode)
+        {
+            logger.Information("Running in CRON MODE (Coravel)");
+
+            host.Services.UseScheduler(s =>
+            {
+                if (arguments.HasCommand("health"))
+                    s.Schedule(() => logger.Information("It's alive! 🧟"))
+                        .EverySecond();
+
+                s.Schedule<TodoService>().EveryTenSeconds();
+                s.Schedule<WeatherService>().EveryMinute();
+            });
+        }
+
+        logger.Information("running host process...");
+        await host.RunAsync();
+    }
+
+    private static ServiceProvider CreateServices(
+        ArgsMap arguments,
+        Logger logger,
+        ToolSettings tool_settings)
+    {
+        var serviceProvider = new ServiceCollection()
+            .AddSingleton(arguments)
+            .AddSingleton(tool_settings)
+            .AddSingleton<Logger>(logger)
+            .AddSingleton<TodoService>()
+            .AddSingleton<WeatherService>()
+            .AddSingleton<Application>()
+            .BuildServiceProvider();
+
+        return serviceProvider;
+    }
+}
